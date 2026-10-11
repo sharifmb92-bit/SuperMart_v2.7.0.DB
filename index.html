@@ -80,10 +80,13 @@
         .tarjeta-compra-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 14px; }
         .tarjeta-compra-detalle { margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; font-size: 13px; }
 
-        .form-nuevo-producto { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; }
-        .inputs-linea { display: flex; gap: 8px; }
-        .inputs-linea input { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; box-sizing: border-box; }
-        .botones-accion-linea { display: flex; gap: 8px; align-items: center; }
+        /* FORMULARIO AJUSTADO PARA EVITAR DESBORDAMIENTO EN CUALQUIER PANTALLA */
+        .form-nuevo-producto { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; box-sizing: border-box; width: 100%; }
+        .inputs-linea { display: flex; gap: 6px; width: 100%; box-sizing: border-box; }
+        .inputs-linea input { padding: 10px 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; box-sizing: border-box; min-width: 0; }
+        #nuevo-nombre { flex: 1.8; }
+        #nuevo-precio { flex: 1; max-width: 110px; }
+        .botones-accion-linea { display: flex; gap: 8px; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-accion { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
         .calc-pantalla { background: #222; color: #00ff66; text-align: right; font-size: 24px; font-family: monospace; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
@@ -341,8 +344,8 @@
         <p style="margin:0 0 8px 0; font-size:13px; font-weight:bold;" data-i18n="add_product_sub">📝 Apuntar Producto (Puedes guardar a 0.00€ para lista):</p>
         <div class="form-nuevo-producto">
             <div class="inputs-linea">
-                <input type="text" id="nuevo-nombre" placeholder="Nombre (ej. Abrillantador)" data-i18n-ph="name_ph" style="flex:2;">
-                <input type="number" id="nuevo-precio" placeholder="Precio € (0 si no sabes)" data-i18n-ph="price_ph" step="0.01" style="flex:1;">
+                <input type="text" id="nuevo-nombre" placeholder="Nombre (ej. Abrillantador)" data-i18n-ph="name_ph">
+                <input type="number" id="nuevo-precio" placeholder="Precio € (0 si no sabes)" data-i18n-ph="price_ph" step="0.01">
             </div>
             <div class="botones-accion-linea">
                 <button class="btn-accion" style="background:var(--azul); color:white;" onclick="guardarNuevoEnLista()"><i class="fas fa-bookmark"></i> <span data-i18n="btn_save_list">Guardar en Lista</span></button>
