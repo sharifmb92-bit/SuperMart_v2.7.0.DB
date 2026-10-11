@@ -28,7 +28,7 @@
         /* Buscador con Letra Grande */
         .buscador-caja { margin-bottom: 8px; position: relative; }
         .buscador-input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 2px solid rgba(0,0,0,0.2); box-sizing: border-box; font-size: 16px; font-weight: bold; color: #000; }
-        .sugerencias-busqueda { background: #fff; color: #333; border-radius: 10px; margin-top: 4px; max-height: 180px; overflow-y: auto; position: absolute; width: 100%; z-index: 150; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; }
+        .sugerencias-busqueda { background: #fff; color: #333; border-radius: 10px; margin-top: 4px; max-height: 220px; overflow-y: auto; position: absolute; width: 100%; z-index: 150; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; }
         .sugerencia-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 15px; cursor: pointer; }
 
         /* Notificación Flotante */
@@ -75,6 +75,10 @@
         .item-habitual-info { display: flex; flex-direction: column; gap: 4px; }
         .item-habitual-precio-badge { background: var(--azul); color: white; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 6px; align-self: flex-start; }
         .item-habitual-acciones { display: flex; gap: 6px; align-items: center; }
+
+        .tarjeta-compra-guardada { background: rgba(0,0,0,0.05); border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+        .tarjeta-compra-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .tarjeta-compra-detalle { margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; font-size: 13px; }
 
         .form-nuevo-producto { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; }
         .inputs-linea { display: flex; gap: 8px; }
@@ -137,9 +141,9 @@
         </div>
     </div>
     
-    <!-- Buscador de Letra Grande con Sugerencias -->
+    <!-- Buscador de Letra Grande con Buscador Inteligente de Categorías -->
     <div class="buscador-caja">
-        <input type="text" class="buscador-input" id="buscador" placeholder="🔍 Escribe producto (ej. tomate, leche)..." data-i18n-ph="search_ph" oninput="filtrarProductos()">
+        <input type="text" class="buscador-input" id="buscador" placeholder="🔍 Escribe producto (ej. mantequilla, tomate)..." data-i18n-ph="search_ph" oninput="filtrarProductos()">
         <div class="sugerencias-busqueda" id="sugerencias"></div>
     </div>
 
@@ -361,7 +365,7 @@
     </div>
 </div>
 
-<!-- Modal Historial -->
+<!-- Modal Historial con Borrado Individual -->
 <div class="modal" id="modal-historial">
     <div class="modal-contenido">
         <div class="modal-header">
@@ -383,9 +387,9 @@
         <input type="number" id="input-limite" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box;" value="150">
         <button class="btn-mini" style="background: var(--azul); color: white; width: 100%; margin-top: 8px; padding: 10px;" onclick="guardarLimite()" data-i18n="btn_save_limit">Guardar Límite</button>
         
-        <!-- SWITCH NUEVO: MODO PASILLOS -->
+        <!-- SWITCH: MODO PASILLOS -->
         <div class="opcion-switch-caja">
-            <span class="switch-lbl" data-i18n="switch_aisles_label">🛒 Ordenar por Pasillos / Zonas del Súper:</span>
+            <span class="switch-lbl" data-i18n="switch_aisles_label">🛒 Ordenar por Pasillos / Zonas:</span>
             <input type="checkbox" class="switch-input" id="switch-pasillos" onchange="toggleModoPasillos(this.checked)">
         </div>
 
@@ -466,11 +470,35 @@
 </script>
 
 <script>
+    // DICCIONARIO INTELIGENTE DE RECONOCIMIENTO AUTOMÁTICO DE CATEGORÍAS
+    const diccionarioSmartCategorias = {
+        'Fruta': ['manzana', 'platano', 'banana', 'naranja', 'pera', 'fresa', 'limon', 'uva', 'kiwi', 'mora', 'arandano', 'cereza', 'sandia', 'melon', 'melocoton', 'albaricoque', 'ciruela', 'mandarina', 'aguacate', 'pina', 'mango'],
+        'Verdura': ['tomate', 'lechuga', 'zanahoria', 'cebolla', 'ajo', 'patata', 'pimiento', 'pepino', 'calabacin', 'berenjena', 'espinaca', 'brocoli', 'coliflor', 'judia', 'puerro', 'champinon', 'seta', 'calabaza'],
+        'Carne': ['pollo', 'pechuga', 'carne', 'ternera', 'cerdo', 'pavo', 'hamburguesa', 'albóndiga', 'albondiga', 'solomillo', 'lomo', 'costilla', 'secreto', 'picada', 'chuleton', 'chuleta', 'sartencilla', 'salchicha'],
+        'Pescado': ['pescado', 'salmon', 'lubina', 'dorada', 'merluza', 'bacalao', 'atun fresco', 'calamar', 'gamba', 'langostino', 'pulpo', 'sepia', 'almeja', 'mejillon', 'sardina'],
+        'Leche': ['leche', 'batido', 'horchata', 'bebida avena', 'bebida soja', 'bebida almendra'],
+        'Yogures': ['mantequilla', 'margarina', 'yogur', 'yogurt', 'queso', 'quesito', 'cuajada', 'nata', 'natilla', 'flan', 'kefir', 'requejson', 'mozzarella', 'parmesano'],
+        'Embutido': ['jamon', 'serrano', 'york', 'chorizo', 'salchichon', 'lomo embuchado', 'mortadela', 'pate', 'pavo lonchas', 'bacon', 'tocino', 'sobrasada', 'fuet', 'chistorra'],
+        'Pan': ['pan', 'barra', 'baguette', 'croissant', 'bollo', 'magdalena', 'bizcocho', 'pan de molde', 'tostada', 'donut', 'ensaimada'],
+        'Pasta/Arroz': ['pasta', 'macarrones', 'espaguetis', 'tallarines', 'arroz', 'lentejas', 'garbanzos', 'alubias', 'habas', 'harina', 'cuscus', 'quinoa', 'fideos'],
+        'Huevos': ['huevo', 'huevos', 'claras', 'huevina'],
+        'Aceite': ['aceite', 'oliva', 'girasol', 'vinagre', 'vinagre modena'],
+        'Conservas': ['aceitunas', 'atun', 'bonito', 'sardinitas', 'maiz', 'esparragos', 'tomate frito', 'tomate triturado', 'pimiento lata', 'pepinillos', 'alcaparras'],
+        'Café': ['cafe', 'cacao', 'colacao', 'nesquik', 'infusion', 'te', 'manzanilla', 'menta'],
+        'Bebidas': ['agua', 'refresco', 'cocacola', 'fanta', 'sprite', 'zumo', 'cerveza', 'vino', 'tinto', 'blanco', 'gaseosa', 'tonica', 'energetica'],
+        'Dulces': ['galletas', 'chocolate', 'bombones', 'patatas fritas', 'pipas', 'frutos secos', 'almendras', 'avellanas', 'palomitas', 'chuches', 'caramelos'],
+        'Congelado': ['hielo', 'helado', 'pizza congelada', 'croquetas', 'patatas congeladas', 'pescado congelado', 'verdura congelada', 'churros congelados'],
+        'Limpieza': ['detergente', 'suavizante', 'fregasuelos', 'lavavajillas', 'lavaplatos', 'fairy', 'lejia', 'amoniaco', 'limpiahogares', 'desengrasante', 'quitagrasas', 'fregona', 'estropajo', 'bayeta'],
+        'Aseo': ['champu', 'gel', 'jabon', 'pasta de dientes', 'dentifrico', 'desodorante', 'crema', 'colonia', 'perfume', 'cuchilla', 'espuma afeitar'],
+        'Papel/Varios': ['papel higienico', 'papel cocina', 'servilletas', 'papel aluminio', 'film transparente', 'bolsas basura', 'velas', 'cerillas'],
+        'Mascotas': ['pienso', 'comida perro', 'comida gato', 'arena gato', 'snack perro', 'lata perro', 'lata gato']
+    };
+
     // SISTEMA MULTI-IDIOMA (i18n) - DICCIONARIO ES / EN
     const i18n = {
         es: {
             btn_cart: "Carro",
-            search_ph: "🔍 Escribe producto (ej. tomate, leche)...",
+            search_ph: "🔍 Escribe producto (ej. mantequilla, tomate)...",
             app_heading: "Gasto Familiar",
             tab_food: "ALIMENTACIÓN",
             tab_home: "HOGAR Y VARIOS",
@@ -517,7 +545,7 @@
         },
         en: {
             btn_cart: "Cart",
-            search_ph: "🔍 Type product (e.g. tomato, milk)...",
+            search_ph: "🔍 Type product (e.g. butter, tomato)...",
             app_heading: "Family Expenses",
             tab_food: "FOOD",
             tab_home: "HOME & MORE",
@@ -538,7 +566,7 @@
             calc_use: "📋 Use",
             offer_title: "⚖️ Offer / Weight Calculator:",
             price_label: "Price:",
-            grams_label: "Grams:",
+            grams_label: "Gramos:",
             units_label: "Qty:",
             frequents_sub: "⚡ Frequent Items (🏠 Mark if already at home):",
             add_product_sub: "📝 Add Item (You can save at €0.00 for list):",
@@ -771,25 +799,29 @@
         if(el) el.innerHTML = `📊 ${langKey === 'es' ? 'Gasto acumulado este mes' : 'Total spent this month'}: <strong>${totalMes.toFixed(2)}€</strong>`;
     }
 
+    // BUSCADOR INTELIGENTE CON RECONOCIMIENTO DE CATEGORÍAS
     function filtrarProductos() {
-        const txt = document.getElementById('buscador').value.toLowerCase().trim();
+        const rawTxt = document.getElementById('buscador').value;
+        const txt = rawTxt.toLowerCase().trim();
         const sugBox = document.getElementById('sugerencias');
         sugBox.innerHTML = '';
 
         if(txt === '') { sugBox.style.display = 'none'; return; }
 
-        let coincidencias = [];
+        let coincidenciasDirectas = [];
         for (let cat in habituales) {
             habituales[cat].forEach(p => {
                 if(p.nombre.toLowerCase().includes(txt)) {
-                    coincidencias.push({ ...p, categoria: cat });
+                    coincidenciasDirectas.push({ ...p, categoria: cat });
                 }
             });
         }
 
-        if(coincidencias.length > 0) {
-            sugBox.style.display = 'block';
-            coincidencias.forEach(item => {
+        sugBox.style.display = 'block';
+
+        // 1. Mostrar productos guardados en Frecuentes
+        if(coincidenciasDirectas.length > 0) {
+            coincidenciasDirectas.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'sugerencia-item';
                 div.innerHTML = `<span><strong>${item.nombre}</strong> (${item.categoria})</span><span style="color:var(--verde); font-weight:bold;">${item.precio > 0 ? '+ ' + item.precio.toFixed(2) + '€' : '⚠️ 0.00€'}</span>`;
@@ -801,9 +833,42 @@
                 };
                 sugBox.appendChild(div);
             });
-        } else {
-            sugBox.style.display = 'block';
-            sugBox.innerHTML = `<div class="sugerencia-item" style="color:gray;">${langKey === 'es' ? 'No está en frecuentes. Entra en una categoría para añadirlo.' : 'Not in frequent items. Open a category to add it.'}</div>`;
+        }
+
+        // 2. Buscar en Diccionario Inteligente de Categorías
+        let categoriaSugerida = null;
+        for (let cat in diccionarioSmartCategorias) {
+            const palabrasClave = diccionarioSmartCategorias[cat];
+            if (palabrasClave.some(p => txt.includes(p) || p.includes(txt))) {
+                categoriaSugerida = cat;
+                break;
+            }
+        }
+
+        if (categoriaSugerida) {
+            const divSmart = document.createElement('div');
+            divSmart.className = 'sugerencia-item';
+            divSmart.style.background = 'rgba(44, 94, 138, 0.08)';
+            divSmart.style.borderLeft = '4px solid var(--azul)';
+            divSmart.innerHTML = `<span>🔎 <strong>${rawTxt.trim()}</strong> → ${langKey === 'es' ? 'Abrir categoría' : 'Open category'} <strong>${categoriaSugerida}</strong></span><span style="color:var(--azul); font-weight:bold;">📂 Abrir</span>`;
+            divSmart.onclick = () => {
+                const nombreIngresado = rawTxt.trim();
+                document.getElementById('buscador').value = '';
+                sugBox.style.display = 'none';
+                abrirCategoriaConPreRelleno(categoriaSugerida, nombreIngresado);
+            };
+            sugBox.appendChild(divSmart);
+        } else if (coincidenciasDirectas.length === 0) {
+            sugBox.innerHTML = `<div class="sugerencia-item" style="color:gray;">${langKey === 'es' ? 'No está en frecuentes. Abre la categoría correspondiente para añadirlo.' : 'Not in frequent items. Open a category to add it.'}</div>`;
+        }
+    }
+
+    function abrirCategoriaConPreRelleno(cat, nombreProducto) {
+        abrirCategoria(cat);
+        const inputNombre = document.getElementById('nuevo-nombre');
+        if(inputNombre && nombreProducto) {
+            inputNombre.value = nombreProducto.charAt(0).toUpperCase() + nombreProducto.slice(1);
+            inputNombre.focus();
         }
     }
 
@@ -998,9 +1063,12 @@
 
             return `
                 <div class="tarjeta-compra-guardada">
-                    <div class="tarjeta-compra-header" onclick="toggleDetalleCompra(${compra.id})">
-                        <span>🛒 ${compra.supermercado || 'Súper'} (${compra.fecha})</span>
-                        <span style="color:var(--azul);">${compra.total.toFixed(2)}€ 🔽</span>
+                    <div class="tarjeta-compra-header">
+                        <span onclick="toggleDetalleCompra(${compra.id})">🛒 ${compra.supermercado || 'Súper'} (${compra.fecha})</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="color:var(--azul);" onclick="toggleDetalleCompra(${compra.id})">${compra.total.toFixed(2)}€ 🔽</span>
+                            <button class="btn-mini" style="background:var(--rojo); color:white; padding:4px 8px; font-size:12px;" onclick="eliminarCompraUnica(${compra.id})" title="Borrar esta compra">🗑️</button>
+                        </div>
                     </div>
                     <div id="det-compra-${compra.id}" class="tarjeta-compra-detalle" style="display:${index === 0 ? 'block' : 'none'};">
                         ${compra.productos.map(p => `<div style="margin-bottom:6px;">• <strong>${p.nombre}</strong> (${p.unidades}x ${p.precioUnitario.toFixed(2)}€) = <strong>${p.total.toFixed(2)}€</strong></div>`).join('')}
@@ -1011,6 +1079,16 @@
                 </div>
             `;
         }).join('');
+    }
+
+    function eliminarCompraUnica(id) {
+        if (confirm(langKey === 'es' ? "¿Quieres borrar solo esta compra del historial?" : "Delete only this purchase from history?")) {
+            historialCompras = historialCompras.filter(c => c.id !== id);
+            guardarDatosDB('compras_detalladas_v150', historialCompras);
+            actualizar();
+            renderHistorialDetallado();
+            mostrarToast("🗑️ " + (langKey === 'es' ? "Compra eliminada" : "Purchase deleted"));
+        }
     }
 
     function toggleDetalleCompra(id) {
